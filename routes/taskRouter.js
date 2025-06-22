@@ -76,9 +76,13 @@ taskRouter.post('/', validate, async (req, res) => {
 
     tasks.push(newTask);
 
+    const jsonData = {
+        "tasks": tasks
+    }
+
     try {
         await fs.writeFile(path.join(__dirname, '../task.json'), JSON.stringify(jsonData));
-        res.status(StatusCodes.OK).json(tasks[tasks.length - 1]);
+        res.status(StatusCodes.CREATED).json(tasks[tasks.length - 1]);
     } catch (err) {
         console.error(chalk.bgRed.bold("Error: ", err))
         res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR)
@@ -116,6 +120,10 @@ taskRouter.put('/:id', validate, async (req, res) => {
         "priority": VALID_PRIORITIES.includes(priority) ? priority : (tasks[taskIndex].priority || 'low'),
     };
 
+    const jsonData = {
+        "tasks": tasks
+    }
+
     try {
         await fs.writeFile(path.join(__dirname, '../task.json'), JSON.stringify(jsonData));
         res.status(StatusCodes.OK).json(tasks[taskIndex]);
@@ -133,6 +141,10 @@ taskRouter.delete('/:id', async (req, res) => {
         return res.sendStatus(StatusCodes.NOT_FOUND);
     }
     tasks.splice(taskIndex, 1);
+
+    const jsonData = {
+        "tasks": tasks
+    }
 
     try {
         await fs.writeFile(path.join(__dirname, '../task.json'), JSON.stringify(jsonData));
