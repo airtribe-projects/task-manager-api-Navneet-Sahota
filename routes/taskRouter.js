@@ -7,23 +7,27 @@ const path = require('path');
 
 const taskRouter = express.Router();
 
+const validate = (req, res, next) => {
+    const { title, description, completed } = req.body;
+
+    if (!title || !description) {
+        res.status(StatusCodes.BAD_REQUEST).json("Missing title or description!");
+        return;
+    }
+
+    if (typeof completed !== 'boolean') {
+        res.status(StatusCodes.BAD_REQUEST).json("'completed' should be typeof boolean");
+        return;
+    }
+
+    next();
+}
+
 taskRouter.get('/', (req, res) => {
     res.status(StatusCodes.OK).json(data.tasks);
 })
 
-taskRouter.get('/:id', (req, res) => {
-    const taskId = req.params.id;
-
-    const task = data.tasks.find(t => t.id === parseInt(taskId))
-
-    if (!task) {
-        res.sendStatus(StatusCodes.NOT_FOUND);
-    }
-
-    res.status(StatusCodes.OK).json(task);
-})
-
-taskRouter.post('/', async (req, res) => {
+taskRouter.post('/', validate, async (req, res) => {
     const { title, description, completed } = req.body;
 
     const tasks = [...data.tasks]
@@ -48,12 +52,29 @@ taskRouter.post('/', async (req, res) => {
     }
 })
 
-taskRouter.put('/:id', async (req, res) => {
+taskRouter.get('/:id', validRoute, (req, res) => {
+    const taskId = req.params.id;
+
+    const task = data.tasks.find(t => t.id === parseInt(taskId))
+
+    if (!task) {
+        res.sendStatus(StatusCodes.NOT_FOUND);
+    }
+
+    res.status(StatusCodes.OK).json(task);
+})
+
+taskRouter.put('/:id', validate, async (req, res) => {
     const { title, description, completed } = req.body;
-    const { id } = req.params;
+    const taskId = req.params.id;
 
     const tasks = [...data.tasks]
-    const taskIndex = tasks.findIndex(t => t.id === parseInt(id))
+    const taskIndex = tasks.findIndex(t => t.id === parseInt(taskId))
+    const task = tasks.find(t => t.id === parseInt(taskId))
+
+    if (!task) {
+        res.sendStatus(StatusCodes.NOT_FOUND);
+    }
     
     tasks[taskIndex] = {
         ...tasks[taskIndex],
@@ -76,9 +97,13 @@ taskRouter.put('/:id', async (req, res) => {
 })
 
 taskRouter.delete('/:id', async (req, res) => {
-    const { id } = req.params;
+    const taskId = req.params.id;
 
-    const tasks = data.tasks.filter(t => t.id !== parseInt(id))
+    const task = data.tasks.find(t => t.id === parseInt(taskId))
+
+    if (!task) {
+        res.sendStatus(StatusCodes.NOT_FOUND);
+    }
     
     const jsonData = {
         "tasks": tasks,
